@@ -139,7 +139,7 @@
       "metadata": {
         "description": "The URL to the GitHub repository to deploy."
       },
-      "defaultValue": "https://github.com/OfficeDev/microsoft-teams-apps-greatideas.git"
+      "defaultValue": "https://github.com/thalluripk/microsoft-teams-apps-greatideas.git"
     },
     "gitBranch": {
       "type": "string",
