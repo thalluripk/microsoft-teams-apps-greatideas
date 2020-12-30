@@ -1,0 +1,77 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+name: "GreatIdea Release Pipeline"
+
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+stages:
+  - stage:
+    displayName: "Build Code" 
+    jobs:
+      - job: 
+        displayName: "Build Job"
+        steps:
+          - task: NuGetToolInstaller@1
+          
+          - task: Npm@1
+            inputs:
+              command: 'custom'
+              customCommand: 'install react-scripts@3.4.1 -g'
+          
+          - task: NuGetCommand@2
+            inputs:
+              restoreSolution: '$(solution)'
+          
+          - task: VSBuild@1
+            inputs:
+              solution: '$(solution)'
+              msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
+          
+
+  - stage: 
+    displayName: "Deploy in DEV"
+    jobs:
+      - job: 
+        displayName: "Deploy Job"
+        steps:
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: '0.12.3'
+              
+          - task: TerraformTaskV1@0
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'Thalluri Azure Connection'
+              backendAzureRmResourceGroupName: 'thalluri-rg-group1'
+              backendAzureRmStorageAccountName: 'thalluristorageaccount1'
+              backendAzureRmContainerName: 'greatideas-container'
+              backendAzureRmKey: 'greatideasState.tfstate'
+          
+          - task: TerraformTaskV1@0
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              commandOptions: '-var-file=parameters-npe.tfvars -lock=false'
+              environmentServiceNameAzureRM: 'Thalluri Azure Connection'
+
+          - task: TerraformTaskV1@0
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              commandOptions: '-auto-approve -var-file=parameters-npe.tfvars -lock=false'
+              environmentServiceNameAzureRM: 'Thalluri Azure Connection'
