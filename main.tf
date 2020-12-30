@@ -8,10 +8,16 @@ terraform {
     subscription_id      = "7ea56f79-1380-42bb-9d4a-98989c8e8422"
     tenant_id            = "4dd77da9-34d7-44e4-b224-9a8cc69a317c"
   }
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 2.26"
+    }
+  }
 }
 
 provider azurerm {
-  version = ">= 2.26"
   skip_provider_registration = true
   features {}
 }
